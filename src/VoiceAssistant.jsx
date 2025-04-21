@@ -4,9 +4,12 @@ export default function VoiceAssistant() {
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [lang, setLang] = useState('en-US');
 
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = 'en-US';
+  recognition.lang = lang;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
@@ -32,6 +35,7 @@ export default function VoiceAssistant() {
 
   const sendToWebhook = async (text, isTest = false) => {
     try {
+      setIsLoading(true);
       const url = isTest ? import.meta.env.VITE_WEBHOOK_TEST_URL : import.meta.env.VITE_WEBHOOK_URL;
       const res = await fetch(url, {
         method: 'POST',
@@ -43,19 +47,27 @@ export default function VoiceAssistant() {
       const reply = data.response || data || 'Done!';
       setResponse(reply);
       speak(reply);
+      setHistory(prev => [...prev, { input: text, output: reply }]);
     } catch (error) {
       console.error('Webhook error:', error);
       const fallback = 'Sorry, something went wrong.';
       setResponse(fallback);
       speak(fallback);
+      setHistory(prev => [...prev, { input: text, output: fallback }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const speak = (text) => {
     const synth = window.speechSynthesis;
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
+    utter.lang = lang;
     synth.speak(utter);
+  };
+
+  const toggleLanguage = () => {
+    setLang(prev => (prev === 'en-US' ? 'fr-CA' : 'en-US'));
   };
 
   return (
@@ -83,9 +95,16 @@ export default function VoiceAssistant() {
           >
             🧪 Run Test Workflow
           </button>
+
+          <button
+            className="w-full py-3 rounded-full text-gray-800 bg-yellow-100 font-semibold text-sm hover:bg-yellow-200"
+            onClick={toggleLanguage}
+          >
+            🌐 Switch to {lang === 'en-US' ? 'French' : 'English'}
+          </button>
         </div>
 
-        <div>
+        <div className="mt-4">
           <label className="text-sm text-gray-600 font-medium">🗣️ You said:</label>
           <div className="bg-gray-50 border rounded-md p-3 text-gray-800 text-sm mt-1 min-h-[40px]">
             {transcript || <span className="italic text-gray-400">Nothing yet</span>}
@@ -95,9 +114,23 @@ export default function VoiceAssistant() {
         <div>
           <label className="text-sm text-gray-600 font-medium">🤖 Assistant says:</label>
           <div className="bg-green-50 border border-green-200 rounded-md p-3 text-green-700 text-sm mt-1 min-h-[40px]">
-            {response || <span className="italic text-gray-400">Waiting for a response…</span>}
+            {isLoading ? <span className="italic text-yellow-600 animate-pulse">Thinking…</span> : response || <span className="italic text-gray-400">Waiting for a response…</span>}
           </div>
         </div>
+
+        {history.length > 0 && (
+          <div className="pt-4 border-t text-left">
+            <h2 className="text-sm font-semibold text-gray-600 mb-2">📜 Conversation History:</h2>
+            <ul className="space-y-2 max-h-48 overflow-auto text-sm">
+              {history.map((entry, i) => (
+                <li key={i} className="bg-gray-50 border rounded-md p-2">
+                  <p><span className="font-semibold">You:</span> {entry.input}</p>
+                  <p><span className="font-semibold">Assistant:</span> {entry.output}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
