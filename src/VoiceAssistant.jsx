@@ -67,29 +67,16 @@ export default function VoiceAssistant() {
 
     const recognition = new Recognition();
     recognition.lang = lang;
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
     setIsListening(true);
     recognition.start();
 
     recognition.onresult = (event) => {
-      const fullTranscript = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join('')
-        .toLowerCase();
-
-      console.log('Heard:', fullTranscript);
-
-      if (fullTranscript.includes('hey nova')) {
-        const command = fullTranscript.split('hey nova')[1]?.trim();
-        if (command) {
-          setTranscript(command);
-          sendToWebhook(command);
-        } else {
-          console.log("Heard 'Hey Nova' but no command followed.");
-        }
-      }
+      const voiceInput = event.results[0][0].transcript;
+      setTranscript(voiceInput);
+      sendToWebhook(voiceInput);
     };
 
     recognition.onerror = (event) => {
@@ -98,8 +85,7 @@ export default function VoiceAssistant() {
     };
 
     recognition.onend = () => {
-      console.log("Recognition ended. Restarting...");
-      recognition.start(); // auto-restart for persistent listening
+      setIsListening(false);
     };
   };
 
@@ -149,7 +135,7 @@ export default function VoiceAssistant() {
   return (
     <div className="voice-wrapper">
       <h1 className="voice-title">🎙️ SDG360 Voice Assistant</h1>
-      <p className="voice-subtitle">Say "Hey Nova" to get started!</p>
+      <p className="voice-subtitle">Tap below and start speaking!</p>
 
       {speechSupported ? (
         <button
@@ -157,7 +143,7 @@ export default function VoiceAssistant() {
           onClick={startListening}
           disabled={isListening}
         >
-          {isListening ? '🎧 Listening…' : '🎤 Start Active Listening'}
+          {isListening ? '🎧 Listening…' : '🎤 Tap to Speak'}
         </button>
       ) : (
         <p style={{ color: 'red', textAlign: 'center' }}>
@@ -180,7 +166,7 @@ export default function VoiceAssistant() {
         🌐 Switch to {lang === 'en-US' ? 'French' : 'English'}
       </button>
 
-      <div style={{ margin: '1rem 0' }}>
+      <div style={{ display:'none' ,margin: '1rem 0' }}>
         <label className="voice-label">🗣️ Voice Preference:</label>
         <select
           className="voice-log"
