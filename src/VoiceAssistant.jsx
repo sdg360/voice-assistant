@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './index.css'; // make sure this points to where your custom CSS is
 
 export default function VoiceAssistant() {
   const [transcript, setTranscript] = useState('');
@@ -71,67 +72,53 @@ export default function VoiceAssistant() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-blue-100 to-gray-100 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md bg-white shadow-lg rounded-3xl p-6 md:p-8 space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">🎙️ Vimar Voice Assistant</h1>
-          <p className="text-sm text-gray-500">Tap below and start speaking!</p>
-        </div>
+    <div className="voice-wrapper">
+      <h1 className="voice-title">🎙️ Vimar Voice Assistant</h1>
+      <p className="voice-subtitle">Tap below and start speaking!</p>
 
-        <div className="flex flex-col items-center gap-4">
-          <button
-            className={`w-full py-3 rounded-full text-white font-semibold text-lg transition ${
-              isListening ? 'bg-red-500' : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-            onClick={startListening}
-            disabled={isListening}
-          >
-            {isListening ? '🎧 Listening…' : '🎤 Tap to Speak'}
-          </button>
+      <button
+        className="voice-button"
+        onClick={startListening}
+        disabled={isListening}
+      >
+        {isListening ? '🎧 Listening…' : '🎤 Tap to Speak'}
+      </button>
 
-          <button
-            className="w-full py-3 rounded-full text-white font-semibold text-lg bg-green-600 hover:bg-green-700"
-            onClick={() => sendToWebhook('This is a test workflow input', true)}
-          >
-            🧪 Run Test Workflow
-          </button>
+      <button
+        className="voice-button secondary"
+        onClick={() => sendToWebhook('This is a test workflow input', true)}
+      >
+        🧪 Run Test Workflow
+      </button>
 
-          <button
-            className="w-full py-3 rounded-full text-gray-800 bg-yellow-100 font-semibold text-sm hover:bg-yellow-200"
-            onClick={toggleLanguage}
-          >
-            🌐 Switch to {lang === 'en-US' ? 'French' : 'English'}
-          </button>
-        </div>
+      <button
+        className="voice-button lang-toggle"
+        onClick={toggleLanguage}
+      >
+        🌐 Switch to {lang === 'en-US' ? 'French' : 'English'}
+      </button>
 
-        <div className="mt-4">
-          <label className="text-sm text-gray-600 font-medium">🗣️ You said:</label>
-          <div className="bg-gray-50 border rounded-md p-3 text-gray-800 text-sm mt-1 min-h-[40px]">
-            {transcript || <span className="italic text-gray-400">Nothing yet</span>}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-sm text-gray-600 font-medium">🤖 Assistant says:</label>
-          <div className="bg-green-50 border border-green-200 rounded-md p-3 text-green-700 text-sm mt-1 min-h-[40px]">
-            {isLoading ? <span className="italic text-yellow-600 animate-pulse">Thinking…</span> : response || <span className="italic text-gray-400">Waiting for a response…</span>}
-          </div>
-        </div>
-
-        {history.length > 0 && (
-          <div className="pt-4 border-t text-left">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2">📜 Conversation History:</h2>
-            <ul className="space-y-2 max-h-48 overflow-auto text-sm">
-              {history.map((entry, i) => (
-                <li key={i} className="bg-gray-50 border rounded-md p-2">
-                  <p><span className="font-semibold">You:</span> {entry.input}</p>
-                  <p><span className="font-semibold">Assistant:</span> {entry.output}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      <label className="voice-label">🗣️ You said:</label>
+      <div className="voice-log">
+        {transcript || <span className="italic">Nothing yet</span>}
       </div>
+
+      <label className="voice-label">🤖 Assistant says:</label>
+      <div className="voice-response">
+        {isLoading ? <span className="italic">Thinking…</span> : (response || <span className="italic">Waiting for a response…</span>)}
+      </div>
+
+      {history.length > 0 && (
+        <div className="voice-history">
+          <h2>📜 Conversation History:</h2>
+          {history.map((entry, i) => (
+            <div className="voice-history-entry" key={i}>
+              <p><strong>You:</strong> {entry.input}</p>
+              <p><strong>Assistant:</strong> {entry.output}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
