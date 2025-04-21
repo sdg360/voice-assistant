@@ -1,19 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import './index.css'; // make sure this points to where your custom CSS is
+import './index.css';
 
 export default function VoiceAssistant() {
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState(() => {
+    const stored = localStorage.getItem('voiceHistory');
+    return stored ? JSON.parse(stored) : [];
+  });
   const [lang, setLang] = useState('en-US');
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(null);
 
   useEffect(() => {
-    window.speechSynthesis.onvoiceschanged = () => {
-      window.speechSynthesis.getVoices();
+    const loadVoices = () => {
+      const allVoices = window.speechSynthesis.getVoices();
+      setVoices(allVoices);
+      const defaultVoice = allVoices.find(v => v.lang === lang && /female/i.test(v.name)) || allVoices[0];
+      setSelectedVoice(defaultVoice);
     };
-  }, []);
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+  }, [lang]);
+
+  useEffect(() => {
+    localStorage.setItem('voiceHistory', JSON.stringify(history));
+  }, [history]);
 
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = lang;
@@ -70,23 +84,17 @@ export default function VoiceAssistant() {
     const synth = window.speechSynthesis;
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = lang;
-
-    const voices = synth.getVoices();
-    const preferredVoice = voices.find(v =>
-      v.name.includes("Google") && v.name.toLowerCase().includes("female")
-    ) || voices.find(v =>
-      v.name.toLowerCase().includes("zira") || v.name.toLowerCase().includes("samantha")
-    ) || voices.find(v => v.lang === lang);
-
-    if (preferredVoice) {
-      utter.voice = preferredVoice;
-    }
-
+    if (selectedVoice) utter.voice = selectedVoice;
     synth.speak(utter);
   };
 
   const toggleLanguage = () => {
     setLang(prev => (prev === 'en-US' ? 'fr-CA' : 'en-US'));
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('voiceHistory');
   };
 
   return (
@@ -117,6 +125,19 @@ export default function VoiceAssistant() {
         🌐 Switch to {lang === 'en-US' ? 'French' : 'English'}
       </button>
 
+      <div style={{ margin: '1rem 0' }}>
+        <label className="voice-label">🗣️ Voice Preference:</label>
+        <select
+          className="voice-log"
+          value={selectedVoice?.name || ''}
+          onChange={(e) => setSelectedVoice(voices.find(v => v.name === e.target.value))}
+        >
+          {voices.map((v, i) => (
+            <option key={i} value={v.name}>{v.name}</option>
+          ))}
+        </select>
+      </div>
+
       <label className="voice-label">🗣️ You said:</label>
       <div className="voice-log">
         {transcript || <span className="italic">Nothing yet</span>}
@@ -129,7 +150,15 @@ export default function VoiceAssistant() {
 
       {history.length > 0 && (
         <div className="voice-history">
-          <h2>📜 Conversation History:</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2>📜 Conversation History:</h2>
+            <button
+              onClick={clearHistory}
+              style={{ padding: '4px 8px', fontSize: '0.8rem', borderRadius: '4px', background: '#f87171', color: '#fff', border: 'none', cursor: 'pointer' }}
+            >
+              Clear
+            </button>
+          </div>
           {history.map((entry, i) => (
             <div className="voice-history-entry" key={i}>
               <p><strong>You:</strong> {entry.input}</p>
