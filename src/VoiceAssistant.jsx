@@ -30,9 +30,10 @@ export default function VoiceAssistant() {
     };
   };
 
-  const sendToWebhook = async (text) => {
+  const sendToWebhook = async (text, isTest = false) => {
     try {
-      const res = await fetch(import.meta.env.VITE_WEBHOOK_URL, {
+      const url = isTest ? import.meta.env.VITE_WEBHOOK_TEST_URL : import.meta.env.VITE_WEBHOOK_URL;
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: text })
@@ -50,26 +51,6 @@ export default function VoiceAssistant() {
     }
   };
 
-  const sendTestWorkflow = async () => {
-    const testText = 'This is a test workflow input';
-    try {
-      const res = await fetch(import.meta.env.VITE_WEBHOOK_TEST_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: testText })
-      });
-      const data = await res.json();
-      const reply = data.response || data || 'Test complete!';
-      setResponse(reply);
-      speak(reply);
-    } catch (error) {
-      console.error('Test webhook error:', error);
-      const fallback = 'Test webhook failed.';
-      setResponse(fallback);
-      speak(fallback);
-    }
-  };
-
   const speak = (text) => {
     const synth = window.speechSynthesis;
     const utter = new SpeechSynthesisUtterance(text);
@@ -78,29 +59,41 @@ export default function VoiceAssistant() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
-        <h1 className="text-xl font-bold mb-4">🎤 Vimar Voice Assistant</h1>
-        <button
-          className={`px-6 py-3 rounded-full text-white text-lg font-medium shadow transition duration-300 ${isListening ? 'bg-red-500' : 'bg-blue-600 hover:bg-blue-700'}`}
-          onClick={startListening}
-          disabled={isListening}
-        >
-          {isListening ? 'Listening…' : 'Tap to Speak'}
-        </button>
-        <button
-          className="mt-4 px-6 py-3 rounded-full text-white text-lg font-medium shadow bg-green-600 hover:bg-green-700"
-          onClick={sendTestWorkflow}
-        >
-          Send Test Workflow
-        </button>
-        <div className="mt-6">
-          <p className="text-gray-600 text-sm">You said:</p>
-          <p className="font-medium">{transcript}</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex flex-col items-center justify-center p-6">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg text-center transition duration-300 ease-in-out">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">🎙️ Vimar Voice Assistant</h1>
+
+        <div className="flex flex-col gap-4 items-center">
+          <button
+            className={`w-60 px-6 py-3 rounded-full text-white text-lg font-semibold shadow transition duration-300 ${
+              isListening ? 'bg-red-500' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+            onClick={startListening}
+            disabled={isListening}
+          >
+            {isListening ? '🎧 Listening…' : '🎤 Tap to Speak'}
+          </button>
+
+          <button
+            className="w-60 px-6 py-3 rounded-full text-white text-lg font-semibold shadow bg-green-600 hover:bg-green-700"
+            onClick={() => sendToWebhook('This is a test workflow input', true)}
+          >
+            🧪 Run Test Workflow
+          </button>
         </div>
-        <div className="mt-4">
+
+        <div className="mt-6 text-left">
+          <p className="text-gray-600 text-sm">You said:</p>
+          <div className="bg-gray-50 border rounded-md p-3 font-mono text-gray-800 mt-1">
+            {transcript || <span className="italic text-gray-400">Nothing yet</span>}
+          </div>
+        </div>
+
+        <div className="mt-4 text-left">
           <p className="text-gray-600 text-sm">Assistant says:</p>
-          <p className="font-medium text-green-600">{response}</p>
+          <div className="bg-green-50 border border-green-200 rounded-md p-3 font-mono text-green-700 mt-1">
+            {response || <span className="italic text-gray-400">Waiting for a response…</span>}
+          </div>
         </div>
       </div>
     </div>
