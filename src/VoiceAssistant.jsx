@@ -17,12 +17,19 @@ export default function VoiceAssistant() {
   useEffect(() => {
     const loadVoices = () => {
       const allVoices = window.speechSynthesis.getVoices();
-      setVoices(allVoices);
-      const defaultVoice = allVoices.find(v => v.lang === lang && /female/i.test(v.name)) || allVoices[0];
-      setSelectedVoice(defaultVoice);
+      if (allVoices.length > 0) {
+        setVoices(allVoices);
+        const defaultVoice =
+          allVoices.find(v => v.lang === lang && /female/i.test(v.name)) || allVoices[0];
+        setSelectedVoice(defaultVoice);
+      } else {
+        // Try again shortly if voices aren't ready yet
+        setTimeout(loadVoices, 200);
+      }
     };
+  
     window.speechSynthesis.onvoiceschanged = loadVoices;
-    loadVoices();
+    loadVoices(); // attempt immediately as well
   }, [lang]);
 
   useEffect(() => {
