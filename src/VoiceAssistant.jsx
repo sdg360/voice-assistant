@@ -27,7 +27,8 @@ export default function VoiceAssistant() {
 
   const sendToWebhook = async (text) => {
     try {
-      const res = await fetch('https://your-n8n-domain.com/webhook/voice', {
+      //const res = await fetch('https://your-n8n-domain.com/webhook/voice', {
+      const res = await fetch(import.meta.env.VITE_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: text })
