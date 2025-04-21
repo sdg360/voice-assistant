@@ -14,6 +14,7 @@ export default function VoiceAssistant() {
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [speechSupported, setSpeechSupported] = useState(true);
+  const [liveCount, setLiveCount] = useState(0);
 
   const translations = {
     'en-US': {
