@@ -51,6 +51,17 @@ export default function VoiceAssistant() {
   const t = translations[lang];
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      fetch('/api/ping')
+        .then(res => res.json())
+        .then(data => setLiveCount(data.count));
+    }, 15000); // every 15 seconds
+  
+    return () => clearInterval(interval);
+  }, []);
+  
+
+  useEffect(() => {
     const loadVoices = () => {
       const allVoices = window.speechSynthesis.getVoices();
       setVoices(allVoices);
@@ -171,6 +182,8 @@ export default function VoiceAssistant() {
     <div className="voice-wrapper">
       <h1 className="voice-title">{t.title}</h1>
       <p className="voice-subtitle">{t.subtitle}</p>
+      <p>👥 {liveCount} people are here now</p>
+
 
       {speechSupported ? (
         <button
