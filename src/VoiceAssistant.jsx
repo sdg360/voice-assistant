@@ -20,6 +20,11 @@ export default function VoiceAssistant() {
       sendToWebhook(voiceInput);
     };
 
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
     recognition.onend = () => {
       setIsListening(false);
     };
@@ -27,19 +32,39 @@ export default function VoiceAssistant() {
 
   const sendToWebhook = async (text) => {
     try {
-      //const res = await fetch('https://your-n8n-domain.com/webhook/voice', {
       const res = await fetch(import.meta.env.VITE_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: text })
       });
+
       const data = await res.json();
-      const reply = data.response || 'Done!';
+      const reply = data.response || data || 'Done!';
       setResponse(reply);
       speak(reply);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Webhook error:', error);
       const fallback = 'Sorry, something went wrong.';
+      setResponse(fallback);
+      speak(fallback);
+    }
+  };
+
+  const sendTestWorkflow = async () => {
+    const testText = 'This is a test workflow input';
+    try {
+      const res = await fetch(import.meta.env.VITE_WEBHOOK_TEST_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: testText })
+      });
+      const data = await res.json();
+      const reply = data.response || data || 'Test complete!';
+      setResponse(reply);
+      speak(reply);
+    } catch (error) {
+      console.error('Test webhook error:', error);
+      const fallback = 'Test webhook failed.';
       setResponse(fallback);
       speak(fallback);
     }
@@ -53,28 +78,29 @@ export default function VoiceAssistant() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 0 12px rgba(0,0,0,0.1)', padding: '32px', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
-        <h1>🎤 Vimar Voice Assistant</h1>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
+        <h1 className="text-xl font-bold mb-4">🎤 Vimar Voice Assistant</h1>
         <button
-          style={{
-            padding: '12px 24px',
-            borderRadius: '999px',
-            fontSize: '16px',
-            color: '#fff',
-            backgroundColor: isListening ? '#e53e3e' : '#3182ce',
-            border: 'none',
-            cursor: 'pointer',
-            marginTop: '20px'
-          }}
+          className={`px-6 py-3 rounded-full text-white text-lg font-medium shadow transition duration-300 ${isListening ? 'bg-red-500' : 'bg-blue-600 hover:bg-blue-700'}`}
           onClick={startListening}
           disabled={isListening}
         >
           {isListening ? 'Listening…' : 'Tap to Speak'}
         </button>
-        <div style={{ marginTop: '24px' }}>
-          <p><strong>You said:</strong> {transcript}</p>
-          <p><strong>Assistant says:</strong> {response}</p>
+        <button
+          className="mt-4 px-6 py-3 rounded-full text-white text-lg font-medium shadow bg-green-600 hover:bg-green-700"
+          onClick={sendTestWorkflow}
+        >
+          Send Test Workflow
+        </button>
+        <div className="mt-6">
+          <p className="text-gray-600 text-sm">You said:</p>
+          <p className="font-medium">{transcript}</p>
+        </div>
+        <div className="mt-4">
+          <p className="text-gray-600 text-sm">Assistant says:</p>
+          <p className="font-medium text-green-600">{response}</p>
         </div>
       </div>
     </div>
