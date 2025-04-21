@@ -160,6 +160,7 @@ export default function VoiceAssistant() {
       </button>
 
       <button
+        style={{ display: 'none' }}
         className="voice-button lang-toggle"
         onClick={toggleLanguage}
       >
