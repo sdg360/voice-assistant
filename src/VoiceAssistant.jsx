@@ -85,6 +85,7 @@ export default function VoiceAssistant() {
       </button>
 
       <button
+        style={{ display: 'none' }}
         className="voice-button secondary"
         onClick={() => sendToWebhook('This is a test workflow input', true)}
       >
