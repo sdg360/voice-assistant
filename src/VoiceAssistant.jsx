@@ -166,7 +166,7 @@ export default function VoiceAssistant() {
         🌐 Switch to {lang === 'en-US' ? 'French' : 'English'}
       </button>
 
-      <div style={{ margin: '1rem 0' }}>
+      <div style={{ display:'none' ,margin: '1rem 0' }}>
         <label className="voice-label">🗣️ Voice Preference:</label>
         <select
           className="voice-log"
