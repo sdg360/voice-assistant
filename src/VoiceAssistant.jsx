@@ -15,6 +15,41 @@ export default function VoiceAssistant() {
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [speechSupported, setSpeechSupported] = useState(true);
 
+  const translations = {
+    'en-US': {
+      title: '🎙️ SDG360 Voice Assistant',
+      subtitle: 'Tap below and start speaking!',
+      tapToSpeak: '🎤 Tap to Speak',
+      listening: '🎧 Listening…',
+      switchTo: 'Switch to French',
+      voicePreference: 'Voice Preference',
+      youSaid: '🗣️ You said:',
+      assistantSays: '🤖 Assistant says:',
+      thinking: 'Thinking…',
+      waiting: 'Waiting for a response…',
+      conversationHistory: '📜 Conversation History:',
+      clear: 'Clear',
+      notSupported: 'Speech recognition is not supported in your browser.'
+    },
+    'fr-CA': {
+      title: '🎙️ Assistant vocal SDG360',
+      subtitle: 'Appuyez ci-dessous et commencez à parler!',
+      tapToSpeak: '🎤 Appuyez pour parler',
+      listening: '🎧 Écoute en cours…',
+      switchTo: 'Passer à l’anglais',
+      voicePreference: 'Préférence de voix',
+      youSaid: '🗣️ Vous avez dit :',
+      assistantSays: '🤖 L’assistant dit :',
+      thinking: 'Réflexion…',
+      waiting: 'En attente de réponse…',
+      conversationHistory: '📜 Historique des conversations :',
+      clear: 'Effacer',
+      notSupported: 'La reconnaissance vocale n’est pas prise en charge dans votre navigateur.'
+    }
+  };
+
+  const t = translations[lang];
+
   useEffect(() => {
     const loadVoices = () => {
       const allVoices = window.speechSynthesis.getVoices();
@@ -134,8 +169,8 @@ export default function VoiceAssistant() {
 
   return (
     <div className="voice-wrapper">
-      <h1 className="voice-title">🎙️ SDG360 Voice Assistant</h1>
-      <p className="voice-subtitle">Tap below and start speaking!</p>
+      <h1 className="voice-title">{t.title}</h1>
+      <p className="voice-subtitle">{t.subtitle}</p>
 
       {speechSupported ? (
         <button
@@ -143,12 +178,10 @@ export default function VoiceAssistant() {
           onClick={startListening}
           disabled={isListening}
         >
-          {isListening ? '🎧 Listening…' : '🎤 Tap to Speak'}
+          {isListening ? t.listening : t.tapToSpeak}
         </button>
       ) : (
-        <p style={{ color: 'red', textAlign: 'center' }}>
-          Speech recognition is not supported in your browser.
-        </p>
+        <p style={{ color: 'red', textAlign: 'center' }}>{t.notSupported}</p>
       )}
 
       <button
@@ -160,15 +193,14 @@ export default function VoiceAssistant() {
       </button>
 
       <button
-        style={{ display: 'none' }}
         className="voice-button lang-toggle"
         onClick={toggleLanguage}
       >
-        🌐 Switch to {lang === 'en-US' ? 'French' : 'English'}
+        🌐 {t.switchTo}
       </button>
 
-      <div style={{ display:'none' ,margin: '1rem 0' }}>
-        <label className="voice-label">🗣️ Voice Preference:</label>
+      <div style={{ margin: '1rem 0' }}>
+        <label className="voice-label">{t.voicePreference}:</label>
         <select
           className="voice-log"
           value={selectedVoice?.name || ''}
@@ -180,25 +212,25 @@ export default function VoiceAssistant() {
         </select>
       </div>
 
-      <label className="voice-label">🗣️ You said:</label>
+      <label className="voice-label">{t.youSaid}</label>
       <div className="voice-log">
         {transcript || <span className="italic">Nothing yet</span>}
       </div>
 
-      <label className="voice-label">🤖 Assistant says:</label>
+      <label className="voice-label">{t.assistantSays}</label>
       <div className="voice-response">
-        {isLoading ? <span className="italic">Thinking…</span> : (response || <span className="italic">Waiting for a response…</span>)}
+        {isLoading ? <span className="italic">{t.thinking}</span> : (response || <span className="italic">{t.waiting}</span>)}
       </div>
 
       {history.length > 0 && (
         <div className="voice-history">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2>📜 Conversation History:</h2>
+            <h2>{t.conversationHistory}</h2>
             <button
               onClick={clearHistory}
               style={{ padding: '4px 8px', fontSize: '0.8rem', borderRadius: '4px', background: '#f87171', color: '#fff', border: 'none', cursor: 'pointer' }}
             >
-              Clear
+              {t.clear}
             </button>
           </div>
           {history.map((entry, i) => (
