@@ -29,6 +29,27 @@ export default function VoiceAssistant() {
     localStorage.setItem('voiceHistory', JSON.stringify(history));
   }, [history]);
 
+  useEffect(() => {
+    const handleVoicesReady = () => {
+      const utter = new SpeechSynthesisUtterance("Hello from the assistant!");
+      utter.lang = 'en-US';
+
+      const availableVoices = window.speechSynthesis.getVoices();
+      const preferred = availableVoices.find(v =>
+        v.lang === 'en-US' && v.name.toLowerCase().includes('female')
+      );
+      if (preferred) utter.voice = preferred;
+
+      window.speechSynthesis.speak(utter);
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = handleVoicesReady;
+    } else {
+      handleVoicesReady();
+    }
+  }, []);
+
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = lang;
   recognition.interimResults = false;
