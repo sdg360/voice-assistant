@@ -14,7 +14,6 @@ export default function VoiceAssistant() {
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [speechSupported, setSpeechSupported] = useState(true);
-  const [voiceReady, setVoiceReady] = useState(false);
 
   const translations = {
     'en-US': {
@@ -30,8 +29,7 @@ export default function VoiceAssistant() {
       waiting: 'Waiting for a response…',
       conversationHistory: '📜 Conversation History:',
       clear: 'Clear',
-      notSupported: 'Speech recognition is not supported in your browser.',
-      startVoice: '🔊 Tap to enable speech'
+      notSupported: 'Speech recognition is not supported in your browser.'
     },
     'fr-CA': {
       title: '🎙️ Assistant vocal SDG360',
@@ -46,8 +44,7 @@ export default function VoiceAssistant() {
       waiting: 'En attente de réponse…',
       conversationHistory: '📜 Historique des conversations :',
       clear: 'Effacer',
-      notSupported: 'La reconnaissance vocale n’est pas prise en charge dans votre navigateur.',
-      startVoice: '🔊 Appuyez pour activer la parole'
+      notSupported: 'La reconnaissance vocale n’est pas prise en charge dans votre navigateur.'
     }
   };
 
@@ -56,7 +53,6 @@ export default function VoiceAssistant() {
   useEffect(() => {
     const loadVoices = () => {
       const allVoices = window.speechSynthesis.getVoices();
-      if (allVoices.length === 0) return;
       setVoices(allVoices);
       const defaultVoice = allVoices.find(v => v.lang === lang && /female/i.test(v.name)) || allVoices[0];
       setSelectedVoice(defaultVoice);
@@ -70,31 +66,32 @@ export default function VoiceAssistant() {
   }, [history]);
 
   useEffect(() => {
-    if (!('speechSynthesis' in window)) {
-      alert("Speech synthesis is not supported in this browser.");
+    const handleVoicesReady = () => {
+      const utter = new SpeechSynthesisUtterance("Hello from the assistant!");
+      utter.lang = 'en-US';
+
+      const availableVoices = window.speechSynthesis.getVoices();
+      const preferred = availableVoices.find(v =>
+        v.lang === 'en-US' && v.name.toLowerCase().includes('female')
+      );
+      if (preferred) utter.voice = preferred;
+
+      window.speechSynthesis.speak(utter);
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = handleVoicesReady;
+    } else {
+      handleVoicesReady();
     }
+  }, []);
+
+  useEffect(() => {
     if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
       setSpeechSupported(false);
       console.warn("Speech recognition is not supported in this browser.");
     }
   }, []);
-
-  const speak = (text) => {
-    if (!('speechSynthesis' in window)) return;
-    const synth = window.speechSynthesis;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = lang;
-    if (selectedVoice) utter.voice = selectedVoice;
-    synth.speak(utter);
-  };
-
-  const triggerGreeting = () => {
-    const utter = new SpeechSynthesisUtterance("Hello from the assistant!");
-    utter.lang = lang;
-    if (selectedVoice) utter.voice = selectedVoice;
-    window.speechSynthesis.speak(utter);
-    setVoiceReady(true);
-  };
 
   const startListening = () => {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -153,6 +150,14 @@ export default function VoiceAssistant() {
     }
   };
 
+  const speak = (text) => {
+    const synth = window.speechSynthesis;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = lang;
+    if (selectedVoice) utter.voice = selectedVoice;
+    synth.speak(utter);
+  };
+
   const toggleLanguage = () => {
     setLang(prev => (prev === 'en-US' ? 'fr-CA' : 'en-US'));
   };
@@ -167,16 +172,7 @@ export default function VoiceAssistant() {
       <h1 className="voice-title">{t.title}</h1>
       <p className="voice-subtitle">{t.subtitle}</p>
 
-      {!voiceReady && (
-        <button
-          className="voice-button"
-          onClick={triggerGreeting}
-        >
-          {t.startVoice}
-        </button>
-      )}
-
-      {voiceReady && speechSupported ? (
+      {speechSupported ? (
         <button
           className="voice-button"
           onClick={startListening}
@@ -184,7 +180,9 @@ export default function VoiceAssistant() {
         >
           {isListening ? t.listening : t.tapToSpeak}
         </button>
-      ) : null}
+      ) : (
+        <p style={{ color: 'red', textAlign: 'center' }}>{t.notSupported}</p>
+      )}
 
       <button
         style={{ display: 'none' }}
@@ -200,6 +198,19 @@ export default function VoiceAssistant() {
       >
         🌐 {t.switchTo}
       </button>
+
+      <div style={{ display: 'none', margin: '1rem 0' }}>
+        <label className="voice-label">{t.voicePreference}:</label>
+        <select
+          className="voice-log"
+          value={selectedVoice?.name || ''}
+          onChange={(e) => setSelectedVoice(voices.find(v => v.name === e.target.value))}
+        >
+          {voices.map((v, i) => (
+            <option key={i} value={v.name}>{v.name}</option>
+          ))}
+        </select>
+      </div>
 
       <label className="voice-label">{t.youSaid}</label>
       <div className="voice-log">
