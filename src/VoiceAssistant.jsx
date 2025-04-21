@@ -14,25 +14,6 @@ export default function VoiceAssistant() {
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [speechSupported, setSpeechSupported] = useState(true);
-  const isMessenger = /FBAN|FBAV/i.test(navigator.userAgent);
-
-  if (isMessenger) {
-    setSpeechSupported(false);
-    alert("This voice assistant works best outside of Messenger. Please open it in your browser.");
-  }
-
-  {isMessenger && (
-    <a
-      href={window.location.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="voice-button"
-    >
-      🚀 Open in Browser
-    </a>
-  )}
-  
-  
 
   const translations = {
     'en-US': {
