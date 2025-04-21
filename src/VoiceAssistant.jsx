@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './index.css'; // make sure this points to where your custom CSS is
 
 export default function VoiceAssistant() {
@@ -8,12 +8,6 @@ export default function VoiceAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState([]);
   const [lang, setLang] = useState('en-US');
-
-  useEffect(() => {
-    window.speechSynthesis.onvoiceschanged = () => {
-      window.speechSynthesis.getVoices();
-    };
-  }, []);
 
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = lang;
@@ -70,21 +64,21 @@ export default function VoiceAssistant() {
     const synth = window.speechSynthesis;
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = lang;
-
+  
+    // Try to select a female voice
     const voices = synth.getVoices();
-    const preferredVoice = voices.find(v =>
-      v.name.includes("Google") && v.name.toLowerCase().includes("female")
-    ) || voices.find(v =>
-      v.name.toLowerCase().includes("zira") || v.name.toLowerCase().includes("samantha")
-    ) || voices.find(v => v.lang === lang);
-
-    if (preferredVoice) {
-      utter.voice = preferredVoice;
+    const female = voices.find(v =>
+      v.lang === lang &&
+      /female|woman/i.test(v.name + v.voiceURI + v.name) // basic match
+    );
+  
+    if (female) {
+      utter.voice = female;
     }
-
+  
     synth.speak(utter);
   };
-
+  
   const toggleLanguage = () => {
     setLang(prev => (prev === 'en-US' ? 'fr-CA' : 'en-US'));
   };
