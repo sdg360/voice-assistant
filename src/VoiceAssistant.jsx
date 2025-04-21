@@ -64,9 +64,21 @@ export default function VoiceAssistant() {
     const synth = window.speechSynthesis;
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = lang;
+  
+    // Try to select a female voice
+    const voices = synth.getVoices();
+    const female = voices.find(v =>
+      v.lang === lang &&
+      /female|woman/i.test(v.name + v.voiceURI + v.name) // basic match
+    );
+  
+    if (female) {
+      utter.voice = female;
+    }
+  
     synth.speak(utter);
   };
-
+  
   const toggleLanguage = () => {
     setLang(prev => (prev === 'en-US' ? 'fr-CA' : 'en-US'));
   };
