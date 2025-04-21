@@ -199,7 +199,7 @@ export default function VoiceAssistant() {
         🌐 {t.switchTo}
       </button>
 
-      <div style={{ margin: '1rem 0' }}>
+      <div style={{ display: 'none', margin: '1rem 0' }}>
         <label className="voice-label">{t.voicePreference}:</label>
         <select
           className="voice-log"
