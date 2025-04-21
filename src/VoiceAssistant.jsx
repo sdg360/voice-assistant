@@ -73,7 +73,7 @@ export default function VoiceAssistant() {
 
   return (
     <div className="voice-wrapper">
-      <h1 className="voice-title">🎙️ Vimar Voice Assistant</h1>
+      <h1 className="voice-title">🎙️ SDG360 Voice Assistant</h1>
       <p className="voice-subtitle">Tap below and start speaking!</p>
 
       <button
