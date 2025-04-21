@@ -13,23 +13,17 @@ export default function VoiceAssistant() {
   const [lang, setLang] = useState('en-US');
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
+  const [speechSupported, setSpeechSupported] = useState(true);
 
   useEffect(() => {
     const loadVoices = () => {
       const allVoices = window.speechSynthesis.getVoices();
-      if (allVoices.length > 0) {
-        setVoices(allVoices);
-        const defaultVoice =
-          allVoices.find(v => v.lang === lang && /female/i.test(v.name)) || allVoices[0];
-        setSelectedVoice(defaultVoice);
-      } else {
-        // Try again shortly if voices aren't ready yet
-        setTimeout(loadVoices, 200);
-      }
+      setVoices(allVoices);
+      const defaultVoice = allVoices.find(v => v.lang === lang && /female/i.test(v.name)) || allVoices[0];
+      setSelectedVoice(defaultVoice);
     };
-  
     window.speechSynthesis.onvoiceschanged = loadVoices;
-    loadVoices(); // attempt immediately as well
+    loadVoices();
   }, [lang]);
 
   useEffect(() => {
@@ -57,12 +51,25 @@ export default function VoiceAssistant() {
     }
   }, []);
 
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = lang;
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+  useEffect(() => {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      setSpeechSupported(false);
+      console.warn("Speech recognition is not supported in this browser.");
+    }
+  }, []);
 
   const startListening = () => {
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      console.warn("Speech recognition is not supported.");
+      return;
+    }
+
+    const recognition = new Recognition();
+    recognition.lang = lang;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
     setIsListening(true);
     recognition.start();
 
@@ -130,13 +137,19 @@ export default function VoiceAssistant() {
       <h1 className="voice-title">🎙️ SDG360 Voice Assistant</h1>
       <p className="voice-subtitle">Tap below and start speaking!</p>
 
-      <button
-        className="voice-button"
-        onClick={startListening}
-        disabled={isListening}
-      >
-        {isListening ? '🎧 Listening…' : '🎤 Tap to Speak'}
-      </button>
+      {speechSupported ? (
+        <button
+          className="voice-button"
+          onClick={startListening}
+          disabled={isListening}
+        >
+          {isListening ? '🎧 Listening…' : '🎤 Tap to Speak'}
+        </button>
+      ) : (
+        <p style={{ color: 'red', textAlign: 'center' }}>
+          Speech recognition is not supported in your browser.
+        </p>
+      )}
 
       <button
         style={{ display: 'none' }}
